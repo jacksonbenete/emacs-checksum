@@ -46,16 +46,63 @@
   :group 'emacs)
 
 (defvar checksum-select-hash-list
-  "Return a list of valid hash types.
-See the function (secure-hash-algorithms) for an updated list."
-  '(("md5" . 'md5)
-    ("sha1" . 'sha1)
-    ("sha224" . 'sha224)
-    ("sha256" . 'sha256)
-    ("sha384" . 'sha384)
-    ("sha512" . 'sha512)))
+  '(("ADLER32" . :ADLER32) ("BLAKE2" . :BLAKE2) ("BLAKE2/160" . :BLAKE2/160)
+    ("BLAKE2/256" . :BLAKE2/256) ("BLAKE2/384" . :BLAKE2/384)
+    ("BLAKE2S" . :BLAKE2S) ("BLAKE2S/128" . :BLAKE2S/128)
+    ("BLAKE2S/160" . :BLAKE2S/160) ("BLAKE2S/224" . :BLAKE2S/224)
+    ("CRC24" . :CRC24) ("CRC32" . :CRC32) ("GROESTL" . :GROESTL)
+    ("GROESTL/224" . :GROESTL/224) ("GROESTL/256" . :GROESTL/256)
+    ("GROESTL/384" . :GROESTL/384) ("JH" . :JH) ("JH/224" . :JH/224)
+    ("JH/256" . :JH/256) ("JH/384" . :JH/384) ("KECCAK" . :KECCAK)
+    ("KECCAK/224" . :KECCAK/224) ("KECCAK/256" . :KECCAK/256)
+    ("KECCAK/384" . :KECCAK/384) ("KUPYNA" . :KUPYNA) ("KUPYNA/256" . :KUPYNA/256)
+    ("MD2" . :MD2) ("MD4" . :MD4) ("MD5" . :MD5) ("RIPEMD-128" . :RIPEMD-128)
+    ("RIPEMD-160" . :RIPEMD-160) ("SHA1" . :SHA1) ("SHA224" . :SHA224)
+    ("SHA256" . :SHA256) ("SHA3" . :SHA3) ("SHA3/224" . :SHA3/224)
+    ("SHA3/256" . :SHA3/256) ("SHA3/384" . :SHA3/384) ("SHA384" . :SHA384)
+    ("SHA512" . :SHA512) ("SHAKE128" . :SHAKE128) ("SHAKE256" . :SHAKE256)
+    ("SKEIN1024" . :SKEIN1024) ("SKEIN1024/384" . :SKEIN1024/384)
+    ("SKEIN1024/512" . :SKEIN1024/512) ("SKEIN256" . :SKEIN256)
+    ("SKEIN256/128" . :SKEIN256/128) ("SKEIN256/160" . :SKEIN256/160)
+    ("SKEIN256/224" . :SKEIN256/224) ("SKEIN512" . :SKEIN512)
+    ("SKEIN512/128" . :SKEIN512/128) ("SKEIN512/160" . :SKEIN512/160)
+    ("SKEIN512/224" . :SKEIN512/224) ("SKEIN512/256" . :SKEIN512/256)
+    ("SKEIN512/384" . :SKEIN512/384) ("SM3" . :SM3) ("STREEBOG" . :STREEBOG)
+    ("STREEBOG/256" . :STREEBOG/256) ("TIGER" . :TIGER) ("TREE-HASH" . :TREE-HASH)
+    ("WHIRLPOOL" . :WHIRLPOOL))
+      "Return a list of digests supported by ironclad.
+See (ironclad:list-all-digests) for an updated list.")
 
-;; TODO: correct function
+;;; TODO: Remove if it's of no use.
+;; (defvar checksum-select-hash-list
+;;   '(("ADLER32" . 'ADLER32) ("BLAKE2" . 'BLAKE2) ("BLAKE2/160" . 'BLAKE2/160)
+;;     ("BLAKE2/256" . 'BLAKE2/256) ("BLAKE2/384" . 'BLAKE2/384)
+;;     ("BLAKE2S" . 'BLAKE2S) ("BLAKE2S/128" . 'BLAKE2S/128)
+;;     ("BLAKE2S/160" . 'BLAKE2S/160) ("BLAKE2S/224" . 'BLAKE2S/224)
+;;     ("CRC24" . 'CRC24) ("CRC32" . 'CRC32) ("GROESTL" . 'GROESTL)
+;;     ("GROESTL/224" . 'GROESTL/224) ("GROESTL/256" . 'GROESTL/256)
+;;     ("GROESTL/384" . 'GROESTL/384) ("JH" . 'JH) ("JH/224" . 'JH/224)
+;;     ("JH/256" . 'JH/256) ("JH/384" . 'JH/384) ("KECCAK" . 'KECCAK)
+;;     ("KECCAK/224" . 'KECCAK/224) ("KECCAK/256" . 'KECCAK/256)
+;;     ("KECCAK/384" . 'KECCAK/384) ("KUPYNA" . 'KUPYNA) ("KUPYNA/256" . 'KUPYNA/256)
+;;     ("MD2" . 'MD2) ("MD4" . 'MD4) ("MD5" . 'MD5) ("RIPEMD-128" . 'RIPEMD-128)
+;;     ("RIPEMD-160" . 'RIPEMD-160) ("SHA1" . 'SHA1) ("SHA224" . 'SHA224)
+;;     ("SHA256" . 'SHA256) ("SHA3" . 'SHA3) ("SHA3/224" . 'SHA3/224)
+;;     ("SHA3/256" . 'SHA3/256) ("SHA3/384" . 'SHA3/384) ("SHA384" . 'SHA384)
+;;     ("SHA512" . 'SHA512) ("SHAKE128" . 'SHAKE128) ("SHAKE256" . 'SHAKE256)
+;;     ("SKEIN1024" . 'SKEIN1024) ("SKEIN1024/384" . 'SKEIN1024/384)
+;;     ("SKEIN1024/512" . 'SKEIN1024/512) ("SKEIN256" . 'SKEIN256)
+;;     ("SKEIN256/128" . 'SKEIN256/128) ("SKEIN256/160" . 'SKEIN256/160)
+;;     ("SKEIN256/224" . 'SKEIN256/224) ("SKEIN512" . 'SKEIN512)
+;;     ("SKEIN512/128" . 'SKEIN512/128) ("SKEIN512/160" . 'SKEIN512/160)
+;;     ("SKEIN512/224" . 'SKEIN512/224) ("SKEIN512/256" . 'SKEIN512/256)
+;;     ("SKEIN512/384" . 'SKEIN512/384) ("SM3" . 'SM3) ("STREEBOG" . 'STREEBOG)
+;;     ("STREEBOG/256" . 'STREEBOG/256) ("TIGER" . 'TIGER) ("TREE-HASH" . 'TREE-HASH)
+;;     ("WHIRLPOOL" . 'WHIRLPOOL))
+;;     "Return a list of digests supported by ironclad.
+;; See (ironclad:list-all-digests) for an updated list.")
+
+;;; TODO: remove if it's of no use.
 (defun checksum-find-hash-by-type ()
   "Find the hash file filtering by supported hash types."
   (expand-file-name
@@ -63,7 +110,6 @@ See the function (secure-hash-algorithms) for an updated list."
 		   nil nil nil nil
 		   (lambda (x) (member (intern (file-name-extension x))
 				       (secure-hash-algorithms))))))
-;; (checksum-find-hash-by-type)
 
 (defun checksum-find-hash ()
   "Find the hash file."
@@ -82,12 +128,11 @@ http://ergoemacs.org/emacs/elisp_read_file_content.html"
     (insert-file-contents file-path)
     (buffer-string)))
 
-;; TODO: for now, it only checksum TEXT and BUFFER
-;; need to use ironclad on common-lisp, create a simple checksum in clisp
-;; compile it, to use it on elisp calling a shell command
-;; http://ergoemacs.org/emacs/elisp_call_shell_command.html
-;; https://www.cliki.net/Ironclad
-;; https://sinax.be/blog/lisp/getting-started-with-asdf.html
+;;; TODO: for now, it only checksum TEXT and BUFFER
+;;; Need to find a way to call common-lisp either compiled or as script.
+;;; 
+;;; See also (start-process-shell-command) at:
+;;; www.gnu.org/software/emacs/manual/html_node/elisp/Asynchronous-Processes.html
 (defun checksum ()
   "Compare a hash and a object to checksum."
   (interactive)
