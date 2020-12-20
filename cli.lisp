@@ -1,10 +1,34 @@
 (defpackage :emacs-checksum/cli
-  (:use :common-lisp :ironclad :sb-unix)
+  (:use :common-lisp :ironclad :unix-opts)
   (:export #:main))
 
 (in-package :emacs-checksum/cli)
 
-;; Install ironclad (ql:quickload "ironclad")
+
+;;; Command Line Arguments
+;; -----------------------------------------------
+(unix-opts:define-opts
+  (:name :help
+   :description "Print this help text"
+   :short #\h
+   :long "help")
+  (:name :spec
+   :description "Select the (i.e. md5, sha256, ...)"
+   :short #\s
+   :long "spec"
+   :arg-parser #'identity)
+  (:name :file
+   :description "Pathname for the file object."
+   :short #\f
+   :long "file"
+   :arg-parser #'identity)
+  (:name :hash
+   :description "Pathname for the hash file."
+   :short #\H
+   :long "hash"
+   :arg-parser #'identity))
+;; -----------------------------------------------
+
 
 ;;; TODO: Remove if it's of no use.
 ;;; This will returns a digest list for usage in elisp as a plist.
@@ -14,31 +38,6 @@
       (cons (cons (string (car lista)) (car lista))
 	    (make-digest-list (cdr lista)))))
 ;; (make-digest-list (ironclad:list-all-digests))
-
-;;; TODO: Remove if it's of no use.
-(defun cli-getenv (name &optional default)
-    #+CMU
-    (let ((x (assoc name ext:*environment-list*
-                    :test #'string=)))
-      (if x (cdr x) default))
-    #-CMU
-    (or
-     #+Allegro (sys:getenv name)
-     #+CLISP (ext:getenv name)
-     #+ECL (si:getenv name)
-     #+SBCL (sb-unix::posix-getenv name)
-     #+LISPWORKS (lispworks:environment-variable name)
-     default))
-
-;;; It will return a list of arguments passed on command line.
-;;; It returns the cdr, since the first argument is either the
-;;; filename or the implementation ("sbcl" in my case)
-(defun cli-args ()
-  (cdr (or 
-	#+SBCL *posix-argv*  
-	#+LISPWORKS system:*line-arguments-list*
-	#+CMU extensions:*command-line-words*
-	nil)))
 
 ;;; digest-file receive a symbol (i.e. :md5) and a filename
 ;;; and returns a "digest", which is an vector (SIMPLE-ARRAY (UNSIGNED-BYTE 8))
@@ -66,26 +65,39 @@
 ;;; It uses equalp because the object-generated hash will be in lower case
 ;;; and the read-file hash will be upper case. See hash-load-spec-file.
 (defun compare-object-to-file (spec object-filename spec-filename)
-  (print "Comparing hashes")
   (let ((spec-file-to-string (string (hash-load-spec-file spec-filename)))
-	(object-hash-to-string (hash-object-to-string spec object-filename)))
+	(object-hash-to-string (hash-object-to-string
+				(values (intern (string-upcase spec) "KEYWORD"))
+				object-filename)))
     (if (equalp spec-file-to-string
 		object-hash-to-string)
 	(print "Checksum passed!")
 	(print "Checksum failed."))))
 
-;;; TODO: change this function to be the main function.
-;;; it need to be callable from the command line and
-;;; read the args with cli-args.
-;;; Should it be compiled? Should it be called as script?
-(defun checksum ()
-  (compare-object-to-file
-   :md5
-   "/home/jack/Downloads/slacko-5.6-PAE.iso"
-   "/home/jack/Downloads/slacko-5.6-PAE.iso.md5.txt"))
-
 (defun main ()
-  (print "compiled and running"))
+  (defvar spec-var)
+  (defvar file-var)
+  (defvar hash-var)
+  ;; TODO: Implement condidion-handling
+  (multiple-value-bind (options free-args)
+      (unix-opts:get-opts)
+    (if (getf options :help)
+        (progn
+          (opts:describe
+           :prefix "Checksum-cli. \nUsage: cli.lisp -s md5 -f \"~/my-file.iso\" -H \"~/my-hash.md5\""
+           :args "[keywords]")
+          (uiop:quit)))
+    (if (getf options :spec)
+	(setf spec-var (getf options :spec))
+	(and (print "Wainting for spec") (uiop:quit)))
+    (if (getf options :file)
+	(setf file-var (getf options :file))
+	(and (print "Wainting for file pathname") (uiop:quit)))
+    (if (getf options :hash)
+	(setf hash-var (getf options :hash))
+	(and (print "Wainting for hash pathname") (uiop:quit)))
+    (format t "Comparing hashes...~%")
+    (compare-object-to-file spec-var file-var hash-var)
+    ))
 
-;;; TODO: remove this later.
-;; (compare-object-to-file (car (cli-args)) (cadr (cli-args)) (caddr (cli-args )))
+;;; END OF FILE
