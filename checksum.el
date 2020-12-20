@@ -38,7 +38,7 @@
 
 ;;; Code:
 
-;; -------------------------------------------------------------------
+;; -----------------------------------------------
 
 
 (defgroup checksum nil
@@ -103,25 +103,30 @@ http://ergoemacs.org/emacs/elisp_read_file_content.html"
     (insert-file-contents file-path)
     (buffer-string)))
 
-;;; TODO: return the content of the process in help buffer
-;;; instead of a buffer
 (defun checksum ()
-  "Compare a hash and a object to checksum."
+  "Compare hash between two files and show results in a help buffer."
   (interactive)
   ;; Get hash, or ask for the hash type if selected file doesn't have a type.
   (setq hash (checksum-find-hash))
   (setq hash-type (intern (file-name-extension hash)))
   (unless (member hash-type (secure-hash-algorithms))
-    (let* ((key (completing-read "Select hash type: " checksum-select-hash-list))
+    (let* ((key (completing-read
+		 "Select hash type: " checksum-select-hash-list))
 	   (val (alist-get key checksum-select-hash-list nil nil #'string=)))
       (setq hash-type (cadr val))))
   ;; Get the file object to be compared
   (setq file (checksum-find-file))
-  (start-process "checksum-cli" "*Process: checksum-cli*"
-		 "~/.emacs.d/emacs-checksum/checksum-cli"
-		 "--spec" (symbol-name hash-type)
-		 "--file" file
-		 "--hash" hash))
+  (let ((cli-buffer-name "*Process: checksum-cli*"))
+    (set-process-sentinel
+     (start-process
+      "checksum-cli" cli-buffer-name
+      "~/.emacs.d/emacs-checksum/checksum-cli"
+      "--spec" (symbol-name hash-type)
+      "--file" file
+      "--hash" hash)
+     (lambda (p e) (when (= 0 (process-exit-status p))
+		     (pop-to-buffer cli-buffer-name
+				    (beginning-of-buffer)))))))
 
 (provide 'checksum)
 ;;; end of file checksum.el
