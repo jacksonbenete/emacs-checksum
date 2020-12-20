@@ -1,5 +1,47 @@
+;;; cli.lisp --- Interface for comparing hash -*- lexical-binding: t -*-
+
+;; Author: Jackson Benete Ferreira <jacksonbenete@gmail.com>
+;; URL: https://github.com/jacksonbenete/emacs-checksum.el
+;; Package-Version: 0.1
+;; Package-Commit: xx
+;; Version: 0.0.1
+;; Package-Requires: ((emacs "25.1"))
+
+;; This file is NOT part of GNU Emacs.
+
+;; The MIT License (MIT)
+;;
+;; Copyright (c) 2016 Al Scott
+;;
+;; Permission is hereby granted, free of charge, to any person obtaining a copy
+;; of this software and associated documentation files (the "Software"), to deal
+;; in the Software without restriction, including without limitation the rights
+;; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+;; copies of the Software, and to permit persons to whom the Software is
+;; furnished to do so, subject to the following conditions:
+;;
+;; The above copyright notice and this permission notice shall be included in all
+;; copies or substantial portions of the Software.
+;;
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+;; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+;; SOFTWARE.
+
+;;; Commentary:
+;;; This code provides a cli software written in Common Lisp
+;;; to be used from elisp.
+
+;;; Code:
+
+;; -----------------------------------------------
+
+
 (defpackage :emacs-checksum/cli
-  (:use :common-lisp :ironclad :unix-opts)
+  (:use :common-lisp :ironclad :unix-opts :split-sequence)
   (:export #:main))
 
 (in-package :emacs-checksum/cli)
@@ -51,14 +93,14 @@
   (ironclad:byte-array-to-hex-string
    (ironclad:digest-file spec file-pathname)))
 
-;;; Simple function to read a text file (hash file)
-;;; and return it.
-;;; A file content of "eab0aae59006a573755d21eb48b9b3a8  slacko-5.6-PAE.iso"
-;;; will return the symbol EAB0AAE59006A573755D21EB48B9B3A8
+;;; TODO: Check if compiler function uiop:read-file-string
+;;; is available for all implementations.
+;;;
+;;; Read a string using compiler function.
 (defun hash-load-spec-file (filename)
-  (with-open-file (in filename)
-    (with-standard-io-syntax
-      (read in))))
+  (car (split-sequence:split-sequence
+	#\Space
+	(uiop:read-file-string filename))))
 
 ;;; Receive a spec as a symbol (i.e. :md5), and two filenames,
 ;;; one for the file-object and the other containing the hash.
@@ -69,10 +111,12 @@
 	(object-hash-to-string (hash-object-to-string
 				(values (intern (string-upcase spec) "KEYWORD"))
 				object-filename)))
-    (if (equalp spec-file-to-string
+    (format t "Generated object hash  : ~a~%" object-hash-to-string)
+    (format t "Received hash from file: ~a~2%" spec-file-to-string)
+    (if (equal spec-file-to-string
 		object-hash-to-string)
-	(print "Checksum passed!")
-	(print "Checksum failed."))))
+	(format t "Checksum matches.~%")
+	(format t "Checksum failed.~%"))))
 
 (defun main ()
   (defvar spec-var)
@@ -96,7 +140,7 @@
     (if (getf options :hash)
 	(setf hash-var (getf options :hash))
 	(and (print "Wainting for hash pathname") (uiop:quit)))
-    (format t "Comparing hashes...~%")
+    (format t "Comparing hashes...~2%")
     (compare-object-to-file spec-var file-var hash-var)
     ))
 
