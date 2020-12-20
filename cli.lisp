@@ -1,13 +1,18 @@
-(in-package :checksum)
+(defpackage :emacs-checksum/cli
+  (:use :common-lisp :ironclad :sb-unix)
+  (:export #:main))
+
+(in-package :emacs-checksum/cli)
 
 ;; Install ironclad (ql:quickload "ironclad")
 
+;;; TODO: Remove if it's of no use.
 ;;; This will returns a digest list for usage in elisp as a plist.
-;; (defun make-digest-list (lista)
-;;   (if (null lista)
-;;       lista
-;;       (cons (cons (string (car lista)) (car lista))
-;; 	    (make-digest-list (cdr lista)))))
+(defun make-digest-list (lista)
+  (if (null lista)
+      lista
+      (cons (cons (string (car lista)) (car lista))
+	    (make-digest-list (cdr lista)))))
 ;; (make-digest-list (ironclad:list-all-digests))
 
 ;;; TODO: Remove if it's of no use.
@@ -63,8 +68,7 @@
 (defun compare-object-to-file (spec object-filename spec-filename)
   (print "Comparing hashes")
   (let ((spec-file-to-string (string (hash-load-spec-file spec-filename)))
-	(object-hash-to-string (hash-object-to-string spec object-filename))
-	(spec-to-string (symbol-name spec)))
+	(object-hash-to-string (hash-object-to-string spec object-filename)))
     (if (equalp spec-file-to-string
 		object-hash-to-string)
 	(print "Checksum passed!")
@@ -79,6 +83,9 @@
    :md5
    "/home/jack/Downloads/slacko-5.6-PAE.iso"
    "/home/jack/Downloads/slacko-5.6-PAE.iso.md5.txt"))
+
+(defun main ()
+  (print "compiled and running"))
 
 ;;; TODO: remove this later.
 ;; (compare-object-to-file (car (cli-args)) (cadr (cli-args)) (caddr (cli-args )))
