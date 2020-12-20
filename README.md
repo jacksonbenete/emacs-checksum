@@ -35,6 +35,11 @@ The software will sucessfully compile (with warnings) under SBCL.
 
 Other implementations than SBCL yet to be tested.
 
+If you want to use (or test) the binary from the command-line:
+```
+> ./checksum-cli --spec md5 --file ~/my-file.iso --hash ~/my-file.iso.md5
+```
+
 ## TODO
 
 Rewrite everything in Elisp.
