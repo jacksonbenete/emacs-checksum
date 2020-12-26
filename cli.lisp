@@ -41,7 +41,7 @@
 
 
 (defpackage :emacs-checksum/cli
-  (:use :common-lisp :ironclad :unix-opts :split-sequence)
+  (:use :common-lisp)
   (:export #:main))
 
 (in-package :emacs-checksum/cli)

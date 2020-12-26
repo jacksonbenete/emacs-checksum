@@ -54,4 +54,4 @@
   :long-description "Compare hashes between two files inside elips/emacs."
   :class :package-inferred-system
   :defsystem-depends-on (:asdf-package-system)
-  :depends-on (:emacs-checksum/cli))
+  :depends-on ("ironclad" "unix-opts" "split-sequence" "emacs-checksum/cli"))
