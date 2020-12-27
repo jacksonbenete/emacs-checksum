@@ -21,6 +21,7 @@ showing all the supported ones by Ironclad.
 ![working package][1]
 
 The software also can be used from dired-mode.
+Flag the desired files and call `checksum-dired`.
 
 If one file is flagged, the software will generate
 the desired hash for the file.
