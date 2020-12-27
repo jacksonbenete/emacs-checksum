@@ -77,6 +77,24 @@
    :arg-parser #'identity))
 ;; -----------------------------------------------
 
+;;; TODO: (sb-posix:getpid) is SBCL only.
+;;; Need to handle other implementations.
+;;; Return current system time of execution and Process PID.
+(defun get-process-information ()
+  "Returns current date as a string."
+  (multiple-value-bind (seconds
+			minutes
+			hours
+			day
+			month
+			year
+			day-of-week
+			daylight-standard-time-p
+			timezone)
+                       (get-decoded-time)
+    (declare (ignore day-of-week daylight-standard-time-p timezone))
+    (format t "~%Checksum executed at ~4,'0d-~2,'0d-~2,'0d, ~2,'0d:~2,'0d:~2,'0d~%" year month day hours minutes seconds)
+    (format t "Process PID: ~s~2%" (sb-posix:getpid))))
 
 ;;; TODO: Remove if it's of no use.
 ;;; This will returns a digest list for usage in elisp as a plist.
@@ -138,7 +156,7 @@
 			    file)))
       (if file
 	  (progn (format t "Generating hash...~2%")
-		 (format t "Generated object hash  : ~a~%" generated-hash))
+		 (format t "Generated object hash  : ~a~2%" generated-hash))
 	  (progn
 	    (format t "ERROR: Flag --file is missing.~&")
 	    (uiop:quit))))))
@@ -178,6 +196,7 @@
   (multiple-value-bind (options)
       (unix-opts:get-opts)
     (let ((operation (getf options :operation)))
+      (get-process-information)
       (cond ((equal operation "generate-hash")
 	     (checksum-generate-hash))
 	    ((equal operation "compare-hash")
