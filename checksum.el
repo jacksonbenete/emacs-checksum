@@ -225,18 +225,19 @@ A file ending with .txt or .spec will be treated as hash."
 (defun checksum ()
   "Compare hash between two files and show results in a help buffer."
   (interactive)
-  ;; Get hash, or ask for the hash type if selected file doesn't have a type.
-  (setq hash (checksum-find-hash))
-  (setq hash-type-string (upcase (file-name-extension hash)))
-  (setq hash-type (intern (file-name-extension hash)))
-  (unless (member hash-type-string checksum-supported-hash-list)
-    (let* ((key (completing-read
-		 "Select hash type: " checksum-select-hash-list))
-	   (val (alist-get key checksum-select-hash-list nil nil #'string=)))
-      (setq hash-type (cadr val))))
-  ;; Get the file object to be compared
-  (setq file (checksum-find-file))
-  (checksum-cli-compare-hashes file hash hash-type))
+  (let* ((file (checksum-find-file))
+	 (hash (checksum-find-hash))
+	 (hash-type (upcase (file-name-extension hash)))
+	 (hash-type-fake-txt
+	  (upcase (file-name-extension (substring hash 0 -4)))))
+    ;; If file-type is supported, call the function
+    ;; Else, if TXT, test if can ignore TXT or ask for correct spec.
+    (if (member hash-type checksum-supported-hash-list)
+	(checksum-cli-compare-hashes file hash (intern hash-type))
+      (if (and (string= hash-type "TXT")
+	       (member hash-type-fake-txt checksum-supported-hash-list))
+	  (checksum-cli-compare-hashes file hash (intern hash-type-fake-txt))
+	(checksum-cli-compare-hashes file hash (checksum-select-hash))))))
 
 ;;; TODO: handle multiple files
 (defun checksum-dired ()
