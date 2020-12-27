@@ -217,7 +217,7 @@ A file ending with .txt or .spec will be treated as hash."
 	     (checksum-cli-compare-hashes first-file second-file (checksum-select-hash))))
 	  
 	  (t (message "Error: Hash file must end as *.spec or *.txt, 
-	  where `'spec` is one of the supported types.'")))))
+where `spec` is one of the supported types.")))))
 
 (defun checksum ()
   "Compare hash between two files and show results in a help buffer."
