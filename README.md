@@ -21,6 +21,7 @@ showing all the supported ones by Ironclad.
 ![working package][1]
 
 The software also can be used from dired-mode.
+
 Flag the desired files and call `checksum-dired`.
 
 If one file is flagged, the software will generate
@@ -43,23 +44,33 @@ message will appear.
 You need to clone the project inside `~/.emacs.d/`
 and compile the Common Lisp code.
 
-There is a Makefile, the compilation is currently working with warnings.
+There is a Makefile.
+
 To compile you can simple call `make` inside the project directory.
 
-There is a name-conflict between *COMMON-LISP:DESCRIBE* and *UNIX-OPTS:DESCRIBE*.
-
-If asked to keep old symbols, chose to `TAKE-NEW` symbols (option 1).
-
-![name-conflict warning][2]
-
-The software will sucessfully compile (with warnings) under SBCL.
+The software will sucessfully compile under SBCL.
 
 Other implementations than SBCL yet to be tested.
 
+## Using the binary
+
 If you want to use (or test) the binary from the command-line:
 ```
-> ./checksum-cli --spec md5 --file ~/my-file.iso --hash ~/my-file.iso.md5
+> ./checksum-cli --operation compare-hash --spec md5 --file ~/my-file.iso --hash ~/my-file.iso.md5
 ```
+
+The software will not run without the --operation flag,
+because it handles different types of operations in one or multiple files.
+
+The current flags working are:
+- `--operation compare-hash` for comparing a file with a hash.
+- `--operation generate-hash` for generating a hash for a single file.
+
+You will need additional flags depending on the operation type.
+
+The possible additional flags are: `--spec`, `--file`, `--hash`.
+
+You can also call `--help` for more information.
 
 ## TODO
 
