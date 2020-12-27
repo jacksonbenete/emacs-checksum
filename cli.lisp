@@ -54,6 +54,12 @@
    :description "Print this help text"
    :short #\h
    :long "help")
+  (:name :operation
+   :description "Flag for type of operation to be performed.
+\nThe flags are: compare-hash; generate-hash; generate-hash-multiple-files."
+   :long "operation"
+   :short #\o
+   :arg-parser #'identity)
   (:name :spec
    :description "Select the (i.e. md5, sha256, ...)"
    :short #\s
@@ -118,30 +124,93 @@
 	(format t "Checksum matches.~%")
 	(format t "Checksum failed.~%"))))
 
-(defun main ()
-  (defvar spec-var)
-  (defvar file-var)
-  (defvar hash-var)
-  ;; TODO: Implement condidion-handling
-  (multiple-value-bind (options free-args)
+;;; Receive one object and an optional spec parameter, and
+;;; generate a hash for the desired spec.
+;;; The Default spec is SHA256 when no spec parameter is found.
+(defun checksum-generate-hash ()
+  (multiple-value-bind (options)
       (unix-opts:get-opts)
+    (let* ((file (getf options :file))
+	   (spec (getf options :spec))
+	   (spec-symbol (values (intern (string-upcase spec) "KEYWORD")))
+	   (generated-hash (hash-object-to-string
+			    (if spec spec-symbol :SHA256)
+			    file)))
+      (if file
+	  (progn (format t "Generating hash...~2%")
+		 (format t "Generated object hash  : ~a~%" generated-hash))
+	  (progn
+	    (format t "ERROR: Flag --file is missing.~&")
+	    (uiop:quit))))))
+
+;;; Compare hash between two files.
+;;; If one of the three needed parameters is missing, 
+;;; the function will fail.
+(defun checksum-compare-hash ()
+  (multiple-value-bind (options)
+      (unix-opts:get-opts)
+    (let ((file (getf options :file))
+	  (hash (getf options :hash))
+	  (spec (getf options :spec)))
+      (cond ((not file)
+	     (format t "ERROR: Flag --file is missing.~&")
+	     (uiop:quit))
+	    ((not hash)
+	     (format t "ERROR: Flag --hash is missing.~&")
+	     (uiop:quit))
+	    ((not spec)
+	     (format t "ERROR: Flag --spec is missing.~&")
+	     (uiop:quit))
+	    (t (format t "Comparing hashes...~2%")
+	       (compare-object-to-file spec file hash))))))
+
+;;; TODO: Implement a case where a lot of files (free-args)
+;;; are given.
+;;; Generate a hash for each one of them.
+(defun checksum-generate-hash-multiple-files ()
+  ;; (multiple-value-bind (options free-args))
+  (format t "ERROR: Yet to be done.")
+  (uiop:quit))
+
+;;; Call the correct function for each type of operation
+;;; received on --operation flag.
+(defun checksum-operation-handler ()
+  (multiple-value-bind (options)
+      (unix-opts:get-opts)
+    (let ((operation (getf options :operation)))
+      (cond ((equal operation "generate-hash")
+	     (checksum-generate-hash))
+	    ((equal operation "compare-hash")
+	     (checksum-compare-hash))
+	    ((equal operation "generate-hash-multiple-files")
+	     (checksum-generate-hash-multiple-files))
+	    (t (format t "ERROR: Require operation doesn't exists.")
+	       (uiop:quit))))))
+
+(defun main ()
+  (multiple-value-bind (options)
+      ;; handle errors
+      (handler-case
+	  (unix-opts:get-opts)
+	(unix-opts:missing-arg (condition)
+	  (format t "ERROR: Argument of ~s is missing.~&"
+		  (unix-opts:option condition))
+	  (uiop:quit))
+	(unix-opts:unknown-option (condition)
+	  (format t "ERROR: Unknown option ~s provided.~&"
+		  condition)
+	  (uiop:quit)))
+    ;; parse options
     (if (getf options :help)
         (progn
           (opts:describe
-           :prefix "Checksum-cli. \nUsage: cli.lisp -s md5 -f \"~/my-file.iso\" -H \"~/my-hash.md5\""
+           :prefix "Checksum-cli. \\nUsage: cli.lisp -s md5 -f \"~/my-file.iso\" -H \"~/my-hash.md5\""
            :args "[keywords]")
           (uiop:quit)))
-    (if (getf options :spec)
-	(setf spec-var (getf options :spec))
-	(and (print "Wainting for spec") (uiop:quit)))
-    (if (getf options :file)
-	(setf file-var (getf options :file))
-	(and (print "Wainting for file pathname") (uiop:quit)))
-    (if (getf options :hash)
-	(setf hash-var (getf options :hash))
-	(and (print "Wainting for hash pathname") (uiop:quit)))
-    (format t "Comparing hashes...~2%")
-    (compare-object-to-file spec-var file-var hash-var)
-    ))
+    (if (getf options :operation)
+	(checksum-operation-handler)
+	(progn
+	  (format t "Operation flag is missing.~&")
+	  (uiop:quit)))))
 
 ;;; END OF FILE
