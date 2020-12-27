@@ -162,24 +162,21 @@ Return results as a read-only help-like buffer."
 				      (beginning-of-buffer)
 				      (checksum-mode)))))))
 
-(defun checksum-cli-generate-hash (file)
-  (let* ((key (completing-read
-	       "Select hash type: " checksum-select-hash-list))
-	 (val (alist-get key checksum-select-hash-list nil nil #'string=))
-	 (hash-type (cadr val)))
+(defun checksum-dired-generate-hash (file)
+  "Send a file object to checksum-cli to generate a hash.
+Return results as a read-only help-like buffer."
     (set-process-sentinel
      (start-process
       "checksum-cli" checksum-buffer-name
       "~/.emacs.d/emacs-checksum/checksum-cli"
       "--operation" "generate-hash"
-      "--spec" (symbol-name hash-type)
-      "--file" file
-      "--hash" hash)
+      "--spec" (symbol-name (checksum-select-hash))
+      "--file" file)
      (lambda (p e) (when (= 0 (process-exit-status p))
 		     (pop-to-buffer checksum-buffer-name
 				    (with-current-buffer checksum-buffer-name
 				      (beginning-of-buffer)
-				      (checksum-mode))))))))
+				      (checksum-mode)))))))
 
 (defun checksum-select-hash ()
   "Select hash from list and return as symbol."
@@ -247,7 +244,7 @@ A file ending with .txt or .spec will be treated as hash."
 	 (file-list-length (length file-list)))
     (if (eq major-mode 'dired-mode)
 	(cond ((= file-list-length 1)
-	       (checksum-cli-generate-hash (car file-list)))
+	       (checksum-dired-generate-hash (car file-list)))
 	      ((= file-list-length 2)
 	       (checksum-dired-compare-files file-list))
 	      ((> file-list-length 2)
