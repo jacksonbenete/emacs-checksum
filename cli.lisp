@@ -98,11 +98,19 @@
 
 ;;; TODO: Remove if it's of no use.
 ;;; This will returns a digest list for usage in elisp as a plist.
-(defun make-digest-list (lista)
+(defun make-digest-plist (lista)
   (if (null lista)
       lista
       (cons (cons (string (car lista)) (car lista))
-	    (make-digest-list (cdr lista)))))
+	    (make-digest-plist (cdr lista)))))
+;; (make-digest-plist (ironclad:list-all-digests))
+
+;;; TODO: Remove if it's of no use.
+;;; This will returns a digest list for usage in elisp as a list.
+(defun make-digest-list (lista)
+  (if (null lista)
+      lista
+      (cons (string (car lista)) (make-digest-list (cdr lista)))))
 ;; (make-digest-list (ironclad:list-all-digests))
 
 ;;; digest-file receive a symbol (i.e. :md5) and a filename
